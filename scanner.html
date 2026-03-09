@@ -4,7 +4,7 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Barcode Scanner</title>
+<title>Advanced Barcode Scanner</title>
 
 <script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
 
@@ -25,7 +25,7 @@ margin-top:20px;
 }
 
 h2{
-margin-top:15px;
+margin-top:20px;
 }
 
 </style>
@@ -53,19 +53,28 @@ type:"LiveStream",
 target:document.querySelector('#scanner'),
 
 constraints:{
-width:640,
-height:480,
-facingMode:"environment"
+
+width:1280,
+height:720,
+facingMode:"environment",
+
+advanced:[
+{zoom:2},
+{focusMode:"continuous"}
+]
+
 }
 
 },
 
 locator:{
 patchSize:"large",
-halfSample:true
+halfSample:false
 },
 
-numOfWorkers: navigator.hardwareConcurrency || 4,
+numOfWorkers:navigator.hardwareConcurrency || 4,
+
+frequency:10,
 
 decoder:{
 readers:[
@@ -92,12 +101,12 @@ Quagga.start();
 });
 
 
-/* DRAW DETECTION BOX */
+/* DRAW SCANNING BOX */
 
 Quagga.onProcessed(function(result){
 
-let drawingCtx = Quagga.canvas.ctx.overlay;
-let drawingCanvas = Quagga.canvas.dom.overlay;
+var drawingCtx = Quagga.canvas.ctx.overlay;
+var drawingCanvas = Quagga.canvas.dom.overlay;
 
 if(result){
 
@@ -145,14 +154,16 @@ drawingCtx,
 
 Quagga.onDetected(function(data){
 
-let code = data.codeResult.code;
+let code=data.codeResult.code;
+
+/* play beep */
 
 document.getElementById("beep").play();
 
 /* send barcode back */
 
 window.opener.postMessage(
-{ barcode: code },
+{ barcode:code },
 "*"
 );
 
