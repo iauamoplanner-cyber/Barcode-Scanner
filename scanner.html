@@ -38,7 +38,7 @@ overflow:hidden;
 border-radius:10px;
 }
 
-/* force camera to fill container */
+/* keep camera inside scanner */
 
 #scanner video,
 #scanner canvas{
@@ -50,41 +50,7 @@ height:100% !important;
 object-fit:cover;
 }
 
-/* scan target box */
-
-#targetBox{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-width:80%;
-height:35%;
-border:3px solid #00ff66;
-border-radius:6px;
-pointer-events:none;
-z-index:10;
-}
-
-/* animated scan line */
-
-#scanLine{
-position:absolute;
-left:10%;
-width:80%;
-height:3px;
-background:#00ff66;
-top:50%;
-z-index:11;
-animation:scan 2s infinite;
-}
-
-@keyframes scan{
-
-0%{ top:35% }
-50%{ top:65% }
-100%{ top:35% }
-
-}
+/* smaller on phones */
 
 @media (max-width:600px){
 
@@ -101,14 +67,9 @@ height:150px;
 
 <body>
 
-<h2>Align Barcode in the Box</h2>
+<h2>Scanning Barcode...</h2>
 
-<div id="scanner">
-
-<div id="targetBox"></div>
-<div id="scanLine"></div>
-
-</div>
+<div id="scanner"></div>
 
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
@@ -167,7 +128,7 @@ Quagga.start();
 
 Quagga.onDetected(function(data){
 
-let code=data.codeResult.code;
+let code = data.codeResult.code;
 
 document.getElementById("beep").play();
 
