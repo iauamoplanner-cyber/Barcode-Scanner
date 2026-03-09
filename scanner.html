@@ -2,10 +2,11 @@
 <html>
 
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Barcode Scanner</title>
 
-<script src="https://unpkg.com/@zxing/library@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
 
 <style>
 
@@ -21,9 +22,9 @@ h2{
 margin-top:20px;
 }
 
-video{
+#scanner{
 width:350px;
-border-radius:10px;
+margin:auto;
 margin-top:20px;
 }
 
@@ -45,11 +46,7 @@ color:white;
 
 <h2>Scan Barcode</h2>
 
-<video id="video"></video>
-
-<br>
-
-<button onclick="switchCamera()">Switch Camera</button>
+<div id="scanner"></div>
 
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
@@ -57,54 +54,67 @@ color:white;
 
 <script>
 
-let codeReader = new ZXing.BrowserMultiFormatReader();
-let cameras = [];
-let currentCamera = 0;
+Quagga.init({
 
-codeReader.listVideoInputDevices().then(videoInputDevices => {
+inputStream: {
 
-cameras = videoInputDevices;
+type : "LiveStream",
 
-if(cameras.length === 0){
-alert("No camera found");
+target: document.querySelector('#scanner'),
+
+constraints: {
+facingMode: "environment"
+}
+
+},
+
+decoder: {
+
+readers: [
+
+"code_128_reader",
+"code_39_reader",
+"ean_reader",
+"ean_8_reader",
+"upc_reader",
+"upc_e_reader"
+
+]
+
+}
+
+}, function(err){
+
+if(err){
+
+console.log(err);
 return;
+
 }
 
-/* prefer rear camera */
-
-cameras.forEach((camera,index)=>{
-
-if(camera.label.toLowerCase().includes("back")){
-currentCamera = index;
-}
+Quagga.start();
 
 });
 
-startScanner();
 
-});
+Quagga.onDetected(function(data){
 
-function startScanner(){
+let code = data.codeResult.code;
 
-codeReader.decodeFromVideoDevice(
-cameras[currentCamera].deviceId,
-'video',
-(result, err) => {
-
-if(result){
+/* play beep */
 
 document.getElementById("beep").play();
 
 /* send barcode back */
 
 window.opener.postMessage(
-{ barcode: result.text },
+{ barcode: code },
 "*"
 );
 
 /* stop scanner */
 
-codeReader.reset();
+Quagga.stop();
 
 /* close scanner */
 
@@ -112,26 +122,10 @@ setTimeout(()=>{
 window.close();
 },400);
 
-}
-
 });
-
-}
-
-function switchCamera(){
-
-currentCamera++;
-
-if(currentCamera >= cameras.length){
-currentCamera = 0;
-}
-
-codeReader.reset();
-startScanner();
-
-}
 
 </script>
 
 </body>
+
 </html>
