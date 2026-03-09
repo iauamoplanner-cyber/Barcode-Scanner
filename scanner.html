@@ -16,19 +16,39 @@ background:#111;
 color:white;
 text-align:center;
 margin:0;
-}
-
-#scanner{
-width:240px;
-margin:auto;
-margin-top:20px;
-border-radius:10px;
-overflow:hidden;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
 }
 
 h2{
-margin-top:15px;
+margin-bottom:15px;
 font-size:18px;
+}
+
+/* Scanner container */
+
+#scanner{
+width:240px;
+height:180px;
+position:relative;
+overflow:hidden;
+border-radius:10px;
+border:2px solid #2ecc71;
+}
+
+/* Force video to stay inside box */
+
+#scanner video,
+#scanner canvas{
+position:absolute;
+top:0;
+left:0;
+width:240px !important;
+height:180px !important;
+object-fit:cover;
 }
 
 </style>
