@@ -16,39 +16,16 @@ background:#111;
 color:white;
 text-align:center;
 margin:0;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-height:100vh;
+}
+
+#scanner{
+width:360px;
+margin:auto;
+margin-top:20px;
 }
 
 h2{
-margin-bottom:15px;
-font-size:18px;
-}
-
-/* Scanner container */
-
-#scanner{
-width:240px;
-height:180px;
-position:relative;
-overflow:hidden;
-border-radius:10px;
-border:2px solid #2ecc71;
-}
-
-/* Force video to stay inside box */
-
-#scanner video,
-#scanner canvas{
-position:absolute;
-top:0;
-left:0;
-width:240px !important;
-height:180px !important;
-object-fit:cover;
+margin-top:15px;
 }
 
 </style>
@@ -70,6 +47,7 @@ object-fit:cover;
 Quagga.init({
 
 inputStream:{
+
 name:"Live",
 type:"LiveStream",
 target:document.querySelector('#scanner'),
@@ -77,23 +55,17 @@ target:document.querySelector('#scanner'),
 constraints:{
 width:640,
 height:480,
-facingMode:"environment",
-advanced:[
-{zoom:2},
-{focusMode:"continuous"}
-]
+facingMode:"environment"
 }
 
 },
 
 locator:{
-patchSize:"medium",
-halfSample:false
+patchSize:"large",
+halfSample:true
 },
 
-numOfWorkers:navigator.hardwareConcurrency || 4,
-
-frequency:10,
+numOfWorkers: navigator.hardwareConcurrency || 4,
 
 decoder:{
 readers:[
@@ -120,18 +92,75 @@ Quagga.start();
 });
 
 
+/* DRAW DETECTION BOX */
+
+Quagga.onProcessed(function(result){
+
+let drawingCtx = Quagga.canvas.ctx.overlay;
+let drawingCanvas = Quagga.canvas.dom.overlay;
+
+if(result){
+
+if(result.boxes){
+
+drawingCtx.clearRect(
+0,
+0,
+drawingCanvas.width,
+drawingCanvas.height
+);
+
+result.boxes.filter(function(box){
+return box !== result.box;
+}).forEach(function(box){
+
+Quagga.ImageDebug.drawPath(
+box,
+{ x:0, y:1 },
+drawingCtx,
+{ color:"green", lineWidth:2 }
+);
+
+});
+
+}
+
+if(result.box){
+
+Quagga.ImageDebug.drawPath(
+result.box,
+{ x:0, y:1 },
+drawingCtx,
+{ color:"red", lineWidth:3 }
+);
+
+}
+
+}
+
+});
+
+
+/* BARCODE DETECTED */
+
 Quagga.onDetected(function(data){
 
-let code=data.codeResult.code;
+let code = data.codeResult.code;
 
 document.getElementById("beep").play();
 
+/* send barcode back */
+
 window.opener.postMessage(
-{ barcode:code },
+{ barcode: code },
 "*"
 );
 
+/* stop scanner */
+
 Quagga.stop();
+
+/* close scanner */
 
 setTimeout(()=>{
 window.close();
