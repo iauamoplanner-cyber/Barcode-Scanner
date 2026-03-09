@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Barcode Scanner</title>
 
-<script src="https://unpkg.com/@zxing/library@latest"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
 
@@ -23,25 +23,13 @@ justify-content:center;
 text-align:center;
 }
 
-h2{
-margin-bottom:15px;
-font-size:18px;
-}
-
-#scanner{
+#reader{
 width:260px;
 max-width:80vw;
-border-radius:10px;
-overflow:hidden;
-}
-
-video{
-width:100%;
-border-radius:10px;
 }
 
 @media (max-width:600px){
-#scanner{
+#reader{
 width:200px;
 }
 }
@@ -54,9 +42,7 @@ width:200px;
 
 <h2>Scanning Barcode...</h2>
 
-<div id="scanner">
-<video id="video" autoplay></video>
-</div>
+<div id="reader"></div>
 
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
@@ -64,38 +50,46 @@ width:200px;
 
 <script>
 
-const codeReader = new ZXing.BrowserMultiFormatReader()
+function onScanSuccess(decodedText) {
 
-codeReader.decodeFromConstraints(
-{
-video:{
-facingMode:{ideal:"environment"},
-width:{ideal:1280},
-height:{ideal:720}
-}
-},
-'video',
-(result, err) => {
-
-if(result){
-
-document.getElementById("beep").play()
+document.getElementById("beep").play();
 
 window.opener.postMessage(
-{ barcode: result.text },
+{ barcode: decodedText },
 "*"
-)
+);
 
-codeReader.reset()
+html5QrcodeScanner.clear();
 
 setTimeout(()=>{
-window.close()
-},300)
+window.close();
+},300);
 
 }
 
+function onScanFailure(error) {
+/* ignore scan errors */
 }
-)
+
+let html5QrcodeScanner = new Html5QrcodeScanner(
+"reader",
+{
+fps: 15,
+qrbox: { width: 200, height: 80 },
+aspectRatio: 1.5,
+formatsToSupport: [
+Html5QrcodeSupportedFormats.CODE_128,
+Html5QrcodeSupportedFormats.CODE_39,
+Html5QrcodeSupportedFormats.EAN_13,
+Html5QrcodeSupportedFormats.EAN_8,
+Html5QrcodeSupportedFormats.UPC_A,
+Html5QrcodeSupportedFormats.UPC_E
+]
+},
+false
+);
+
+html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
 </script>
 
