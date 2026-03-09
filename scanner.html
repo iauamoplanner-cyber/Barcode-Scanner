@@ -80,19 +80,35 @@ type:"LiveStream",
 target:document.querySelector('#scanner'),
 
 constraints:{
-width:640,
-height:480,
-facingMode:"environment"
+width:{ideal:1280},
+height:{ideal:720},
+facingMode:"environment",
+
+advanced:[
+{focusMode:"continuous"},
+{exposureMode:"continuous"},
+{whiteBalanceMode:"continuous"}
+]
+
+},
+
+area:{
+top:"25%",
+right:"15%",
+left:"15%",
+bottom:"25%"
 }
 
 },
 
 locator:{
-patchSize:"large",
-halfSample:true
+patchSize:"medium",
+halfSample:false
 },
 
-numOfWorkers: navigator.hardwareConcurrency || 4,
+frequency:15,
+
+numOfWorkers:navigator.hardwareConcurrency || 4,
 
 decoder:{
 readers:[
