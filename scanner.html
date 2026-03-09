@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,24 +21,30 @@ h2{
 margin-top:20px;
 }
 
-video{
+#container{
 width:350px;
-border-radius:10px;
+margin:auto;
 margin-top:20px;
+}
+
+video{
+width:100%;
+border-radius:10px;
 }
 
 canvas{
 display:none;
 }
 
-button{
+#captureBtn{
 margin-top:20px;
-padding:12px 20px;
+padding:15px;
 font-size:18px;
 border:none;
 border-radius:6px;
 background:#28a745;
 color:white;
+width:100%;
 }
 
 </style>
@@ -50,13 +55,15 @@ color:white;
 
 <h2>Scan Barcode</h2>
 
-<video id="video" autoplay></video>
+<div id="container">
 
-<br>
+<video id="video" autoplay playsinline></video>
 
 <button id="captureBtn">📸 Capture Barcode</button>
 
 <canvas id="canvas"></canvas>
+
+</div>
 
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
@@ -64,12 +71,12 @@ color:white;
 
 <script>
 
-let video = document.getElementById("video");
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
-let captureBtn = document.getElementById("captureBtn");
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const captureBtn = document.getElementById("captureBtn");
 
-let codeReader = new ZXing.BrowserMultiFormatReader();
+const codeReader = new ZXing.BrowserMultiFormatReader();
 
 navigator.mediaDevices.getUserMedia({
 video:{ facingMode:"environment" }
@@ -78,22 +85,22 @@ video:{ facingMode:"environment" }
 video.srcObject = stream;
 });
 
+captureBtn.addEventListener("click",captureBarcode);
 
-captureBtn.onclick = function(){
+function captureBarcode(){
 
 canvas.width = video.videoWidth;
 canvas.height = video.videoHeight;
 
 ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-let img = canvas.toDataURL();
+const img = canvas.toDataURL();
 
-decodeBarcode(img);
+decodeImage(img);
 
-};
+}
 
-
-function decodeBarcode(image){
+function decodeImage(image){
 
 let img = new Image();
 
@@ -106,7 +113,7 @@ codeReader.decodeFromImage(img)
 
 document.getElementById("beep").play();
 
-/* send barcode back */
+/* send barcode to Apps Script */
 
 window.opener.postMessage(
 { barcode: result.text },
@@ -117,10 +124,10 @@ window.opener.postMessage(
 
 setTimeout(()=>{
 window.close();
-},500);
+},400);
 
 })
-.catch(err=>{
+.catch(()=>{
 alert("Barcode not detected. Try again.");
 });
 
