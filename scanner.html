@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html>
-<head>
 
+<head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Barcode Scanner</title>
-
-<script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <style>
 
@@ -15,10 +13,6 @@ background:#111;
 color:white;
 text-align:center;
 margin:0;
-}
-
-h2{
-margin-top:20px;
 }
 
 #container{
@@ -32,11 +26,7 @@ width:100%;
 border-radius:10px;
 }
 
-canvas{
-display:none;
-}
-
-#captureBtn{
+button{
 margin-top:20px;
 padding:15px;
 font-size:18px;
@@ -47,13 +37,16 @@ color:white;
 width:100%;
 }
 
-</style>
+canvas{
+display:none;
+}
 
+</style>
 </head>
 
 <body>
 
-<h2>Scan Barcode</h2>
+<h2>Capture Barcode</h2>
 
 <div id="container">
 
@@ -65,18 +58,11 @@ width:100%;
 
 </div>
 
-<audio id="beep">
-<source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
-</audio>
-
 <script>
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const captureBtn = document.getElementById("captureBtn");
-
-const codeReader = new ZXing.BrowserMultiFormatReader();
 
 navigator.mediaDevices.getUserMedia({
 video:{ facingMode:"environment" }
@@ -85,53 +71,27 @@ video:{ facingMode:"environment" }
 video.srcObject = stream;
 });
 
-captureBtn.addEventListener("click",captureBarcode);
-
-function captureBarcode(){
+document.getElementById("captureBtn").onclick=function(){
 
 canvas.width = video.videoWidth;
 canvas.height = video.videoHeight;
 
 ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-const img = canvas.toDataURL();
+let imageData = canvas.toDataURL("image/png");
 
-decodeImage(img);
+/* send image to Apps Script page */
 
-}
-
-function decodeImage(image){
-
-let img = new Image();
-
-img.src = image;
-
-img.onload = function(){
-
-codeReader.decodeFromImage(img)
-.then(result=>{
-
-document.getElementById("beep").play();
-
-/* send barcode to Apps Script */
-
-window.opener.postMessage(
-{ barcode: result.text },
-"*"
-);
+window.opener.postMessage({
+type:"barcodeImage",
+image:imageData
+},"*");
 
 /* close scanner */
 
 setTimeout(()=>{
 window.close();
-},400);
-
-})
-.catch(()=>{
-alert("Barcode not detected. Try again.");
-});
-
-}
+},300);
 
 }
 
