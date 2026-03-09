@@ -4,7 +4,6 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Barcode Scanner</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -25,18 +24,14 @@ margin-top:20px;
 
 #scanner-container{
 position:relative;
-width:320px;
+width:350px;
 margin:auto;
 margin-top:20px;
 }
 
 #reader{
-width:320px;
-border-radius:10px;
-overflow:hidden;
+width:350px;
 }
-
-/* red laser scan line */
 
 #scan-line{
 position:absolute;
@@ -49,23 +44,8 @@ animation:scan 2s infinite;
 
 @keyframes scan{
 0%{top:0}
-50%{top:90%}
+50%{top:95%}
 100%{top:0}
-}
-
-button{
-margin-top:15px;
-padding:10px 15px;
-font-size:16px;
-border:none;
-border-radius:5px;
-background:#28a745;
-color:white;
-cursor:pointer;
-}
-
-button:hover{
-background:#218838;
 }
 
 </style>
@@ -84,109 +64,42 @@ background:#218838;
 
 </div>
 
-<br>
-
-<button onclick="switchCamera()">Switch Camera</button>
-
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
 </audio>
 
 <script>
 
-let scanner;
-let cameras=[];
-let currentCamera=0;
+let html5QrCode;
 
-scanner=new Html5Qrcode("reader");
+html5QrCode = new Html5Qrcode("reader");
 
-Html5Qrcode.getCameras().then(devices=>{
-
-if(!devices.length){
-
-alert("No camera detected");
-
-return;
-
-}
-
-cameras=devices;
-
-/* choose rear camera if available */
-
-devices.forEach((device,index)=>{
-
-if(device.label.toLowerCase().includes("back") ||
-device.label.toLowerCase().includes("rear")){
-
-currentCamera=index;
-
-}
-
-});
-
-startScanner();
-
-});
-
-function startScanner(){
-
-scanner.start(
-
-cameras[currentCamera].id,
-
+html5QrCode.start(
+{ facingMode: "environment" },
 {
 fps:20,
-qrbox:250
+qrbox:{
+width:300,
+height:150
+}
 },
-
 (decodedText)=>{
-
-/* beep sound */
 
 document.getElementById("beep").play();
 
-/* send barcode back */
+/* send barcode back to inventory system */
 
 window.opener.postMessage(
 { barcode: decodedText },
 "*"
 );
 
-/* continuous scanning delay */
-
-setTimeout(()=>{},800);
-
 },
-
 (error)=>{}
 
 );
 
-}
-
-/* switch camera */
-
-function switchCamera(){
-
-scanner.stop().then(()=>{
-
-currentCamera++;
-
-if(currentCamera>=cameras.length){
-
-currentCamera=0;
-
-}
-
-startScanner();
-
-});
-
-}
-
 </script>
 
 </body>
-
 </html>
