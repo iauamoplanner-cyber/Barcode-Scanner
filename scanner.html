@@ -14,18 +14,46 @@ body{
 font-family:Arial;
 background:#111;
 color:white;
-text-align:center;
 margin:0;
-}
-
-#scanner{
-width:360px;
-margin:auto;
-margin-top:20px;
+height:100vh;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+text-align:center;
 }
 
 h2{
-margin-top:15px;
+margin-bottom:15px;
+font-size:18px;
+}
+
+/* Scanner container */
+
+#scanner{
+width:260px;
+max-width:80vw;
+margin:auto;
+border-radius:10px;
+overflow:hidden;
+}
+
+/* Ensure video stays inside */
+
+#scanner video{
+width:100%;
+height:auto;
+display:block;
+}
+
+/* Smaller scanner on phones */
+
+@media (max-width:600px){
+
+#scanner{
+width:200px;
+}
+
 }
 
 </style>
@@ -47,7 +75,6 @@ margin-top:15px;
 Quagga.init({
 
 inputStream:{
-
 name:"Live",
 type:"LiveStream",
 target:document.querySelector('#scanner'),
@@ -149,18 +176,12 @@ let code = data.codeResult.code;
 
 document.getElementById("beep").play();
 
-/* send barcode back */
-
 window.opener.postMessage(
 { barcode: code },
 "*"
 );
 
-/* stop scanner */
-
 Quagga.stop();
-
-/* close scanner */
 
 setTimeout(()=>{
 window.close();
