@@ -12,7 +12,7 @@
 <style>
 
 body{
-font-family: Arial;
+font-family:Arial;
 background:#111;
 color:white;
 text-align:center;
@@ -36,7 +36,7 @@ border-radius:10px;
 overflow:hidden;
 }
 
-/* red scan line */
+/* red scan line animation */
 
 #scan-line{
 position:absolute;
@@ -49,11 +49,11 @@ animation:scan 2s infinite;
 
 @keyframes scan{
 
-0%{ top:0 }
+0%{top:0}
 
-50%{ top:90% }
+50%{top:90%}
 
-100%{ top:0 }
+100%{top:0}
 
 }
 
@@ -74,84 +74,49 @@ animation:scan 2s infinite;
 </div>
 
 <audio id="beep">
-
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
-
 </audio>
 
 <script>
 
 const scanner = new Html5Qrcode("reader");
 
-Html5Qrcode.getCameras().then(devices=>{
-
-if(!devices.length){
-
-alert("No camera found");
-
-return;
-
-}
-
-/* select rear camera automatically */
-
-let cameraId = devices[0].id;
-
-devices.forEach(device=>{
-
-const label=device.label.toLowerCase();
-
-if(label.includes("back") || label.includes("rear")){
-
-cameraId=device.id;
-
-}
-
-});
+/* Start scanner using rear camera on phones */
 
 scanner.start(
-
-cameraId,
-
+{ facingMode: "environment" },
 {
-
 fps:15,
-
 qrbox:250,
-
 aspectRatio:1.777
-
 },
-
 (decodedText)=>{
 
 /* play beep sound */
 
 document.getElementById("beep").play();
 
-/* send barcode to inventory page */
+/* send barcode back to inventory system */
 
 window.opener.postMessage(
-
 { barcode: decodedText },
-
 "*"
-
 );
 
-/* close scanner */
+/* close scanner window */
 
 setTimeout(()=>{
-
 window.close();
-
 },500);
+
+},
+(errorMessage)=>{
+
+/* ignore scan errors */
 
 }
 
 );
-
-});
 
 </script>
 
