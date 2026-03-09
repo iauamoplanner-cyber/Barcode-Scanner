@@ -16,37 +16,16 @@ background:#111;
 color:white;
 text-align:center;
 margin:0;
-padding-top:40px;
+}
+
+#scanner{
+width:360px;
+margin:auto;
+margin-top:20px;
 }
 
 h2{
-font-size:18px;
-margin-bottom:20px;
-}
-
-/* Center container */
-
-#container{
-display:flex;
-justify-content:center;
-}
-
-/* Scanner box */
-
-#scanner{
-width:260px;
-height:auto;
-border:2px solid #2ecc71;
-border-radius:10px;
-overflow:hidden;
-}
-
-/* Keep video inside scanner */
-
-#scanner video{
-width:100%;
-height:auto;
-display:block;
+margin-top:15px;
 }
 
 </style>
@@ -57,9 +36,7 @@ display:block;
 
 <h2>Scanning Barcode...</h2>
 
-<div id="container">
 <div id="scanner"></div>
-</div>
 
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
@@ -70,6 +47,7 @@ display:block;
 Quagga.init({
 
 inputStream:{
+
 name:"Live",
 type:"LiveStream",
 target:document.querySelector('#scanner'),
@@ -77,23 +55,17 @@ target:document.querySelector('#scanner'),
 constraints:{
 width:640,
 height:480,
-facingMode:"environment",
-advanced:[
-{zoom:2},
-{focusMode:"continuous"}
-]
+facingMode:"environment"
 }
 
 },
 
 locator:{
-patchSize:"medium",
-halfSample:false
+patchSize:"large",
+halfSample:true
 },
 
-numOfWorkers:navigator.hardwareConcurrency || 4,
-
-frequency:10,
+numOfWorkers: navigator.hardwareConcurrency || 4,
 
 decoder:{
 readers:[
@@ -120,18 +92,75 @@ Quagga.start();
 });
 
 
+/* DRAW DETECTION BOX */
+
+Quagga.onProcessed(function(result){
+
+let drawingCtx = Quagga.canvas.ctx.overlay;
+let drawingCanvas = Quagga.canvas.dom.overlay;
+
+if(result){
+
+if(result.boxes){
+
+drawingCtx.clearRect(
+0,
+0,
+drawingCanvas.width,
+drawingCanvas.height
+);
+
+result.boxes.filter(function(box){
+return box !== result.box;
+}).forEach(function(box){
+
+Quagga.ImageDebug.drawPath(
+box,
+{ x:0, y:1 },
+drawingCtx,
+{ color:"green", lineWidth:2 }
+);
+
+});
+
+}
+
+if(result.box){
+
+Quagga.ImageDebug.drawPath(
+result.box,
+{ x:0, y:1 },
+drawingCtx,
+{ color:"red", lineWidth:3 }
+);
+
+}
+
+}
+
+});
+
+
+/* BARCODE DETECTED */
+
 Quagga.onDetected(function(data){
 
-let code=data.codeResult.code;
+let code = data.codeResult.code;
 
 document.getElementById("beep").play();
 
+/* send barcode back */
+
 window.opener.postMessage(
-{ barcode:code },
+{ barcode: code },
 "*"
 );
 
+/* stop scanner */
+
 Quagga.stop();
+
+/* close scanner */
 
 setTimeout(()=>{
 window.close();
