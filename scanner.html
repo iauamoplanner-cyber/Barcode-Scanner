@@ -2,8 +2,11 @@
 <html>
 
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Barcode Scanner</title>
+
+<script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <style>
 
@@ -15,77 +18,49 @@ text-align:center;
 margin:0;
 }
 
-#container{
-width:350px;
-margin:auto;
-margin-top:20px;
-}
-
 video{
-width:100%;
+width:350px;
+margin-top:20px;
 border-radius:10px;
 }
 
-button{
-margin-top:20px;
-padding:15px;
-font-size:18px;
-border:none;
-border-radius:6px;
-background:#28a745;
-color:white;
-width:100%;
-}
-
-canvas{
-display:none;
-}
-
 </style>
+
 </head>
 
 <body>
 
-<h2>Capture Barcode</h2>
+<h2>Scanning Barcode...</h2>
 
-<div id="container">
+<video id="video"></video>
 
-<video id="video" autoplay playsinline></video>
-
-<button id="captureBtn">📸 Capture Barcode</button>
-
-<canvas id="canvas"></canvas>
-
-</div>
+<audio id="beep">
+<source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
+</audio>
 
 <script>
 
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+let codeReader = new ZXing.BrowserMultiFormatReader();
 
-navigator.mediaDevices.getUserMedia({
-video:{ facingMode:"environment" }
-})
-.then(stream=>{
-video.srcObject = stream;
-});
+codeReader.decodeFromVideoDevice(
+null,
+'video',
+(result, err) => {
 
-document.getElementById("captureBtn").onclick=function(){
+if(result){
 
-canvas.width = video.videoWidth;
-canvas.height = video.videoHeight;
+document.getElementById("beep").play();
 
-ctx.drawImage(video,0,0,canvas.width,canvas.height);
+/* send barcode to Apps Script */
 
-let imageData = canvas.toDataURL("image/png");
+window.opener.postMessage(
+{ barcode: result.text },
+"*"
+);
 
-/* send image to Apps Script page */
+/* stop scanner */
 
-window.opener.postMessage({
-type:"barcodeImage",
-image:imageData
-},"*");
+codeReader.reset();
 
 /* close scanner */
 
@@ -94,6 +69,8 @@ window.close();
 },300);
 
 }
+
+});
 
 </script>
 
