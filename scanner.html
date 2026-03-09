@@ -33,11 +33,11 @@ display:none;
 }
 
 button{
-margin-top:15px;
-padding:10px 15px;
-font-size:16px;
+margin-top:20px;
+padding:12px 20px;
+font-size:18px;
 border:none;
-border-radius:5px;
+border-radius:6px;
 background:#28a745;
 color:white;
 }
@@ -54,7 +54,7 @@ color:white;
 
 <br>
 
-<button onclick="captureBarcode()">📸 Capture Barcode</button>
+<button id="captureBtn">📸 Capture Barcode</button>
 
 <canvas id="canvas"></canvas>
 
@@ -67,6 +67,7 @@ color:white;
 let video = document.getElementById("video");
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
+let captureBtn = document.getElementById("captureBtn");
 
 let codeReader = new ZXing.BrowserMultiFormatReader();
 
@@ -77,20 +78,22 @@ video:{ facingMode:"environment" }
 video.srcObject = stream;
 });
 
-function captureBarcode(){
+
+captureBtn.onclick = function(){
 
 canvas.width = video.videoWidth;
 canvas.height = video.videoHeight;
 
 ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-let imageData = canvas.toDataURL();
+let img = canvas.toDataURL();
 
-decodeImage(imageData);
+decodeBarcode(img);
 
-}
+};
 
-function decodeImage(image){
+
+function decodeBarcode(image){
 
 let img = new Image();
 
@@ -103,7 +106,7 @@ codeReader.decodeFromImage(img)
 
 document.getElementById("beep").play();
 
-/* send barcode to Apps Script */
+/* send barcode back */
 
 window.opener.postMessage(
 { barcode: result.text },
@@ -114,7 +117,7 @@ window.opener.postMessage(
 
 setTimeout(()=>{
 window.close();
-},400);
+},500);
 
 })
 .catch(err=>{
@@ -128,5 +131,4 @@ alert("Barcode not detected. Try again.");
 </script>
 
 </body>
-
 </html>
