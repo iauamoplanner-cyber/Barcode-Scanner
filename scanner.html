@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Barcode Scanner</title>
 
-<script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <style>
 
@@ -22,10 +22,14 @@ h2{
 margin-top:20px;
 }
 
-#scanner{
+video{
 width:350px;
-margin:auto;
+border-radius:10px;
 margin-top:20px;
+}
+
+canvas{
+display:none;
 }
 
 button{
@@ -46,7 +50,13 @@ color:white;
 
 <h2>Scan Barcode</h2>
 
-<div id="scanner"></div>
+<video id="video" autoplay></video>
+
+<br>
+
+<button onclick="captureBarcode()">📸 Capture Barcode</button>
+
+<canvas id="canvas"></canvas>
 
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
@@ -54,67 +64,51 @@ color:white;
 
 <script>
 
-Quagga.init({
+let video = document.getElementById("video");
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
 
-inputStream: {
+let codeReader = new ZXing.BrowserMultiFormatReader();
 
-type : "LiveStream",
-
-target: document.querySelector('#scanner'),
-
-constraints: {
-facingMode: "environment"
-}
-
-},
-
-decoder: {
-
-readers: [
-
-"code_128_reader",
-"code_39_reader",
-"ean_reader",
-"ean_8_reader",
-"upc_reader",
-"upc_e_reader"
-
-]
-
-}
-
-}, function(err){
-
-if(err){
-
-console.log(err);
-return;
-
-}
-
-Quagga.start();
-
+navigator.mediaDevices.getUserMedia({
+video:{ facingMode:"environment" }
+})
+.then(stream=>{
+video.srcObject = stream;
 });
 
+function captureBarcode(){
 
-Quagga.onDetected(function(data){
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
 
-let code = data.codeResult.code;
+ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-/* play beep */
+let imageData = canvas.toDataURL();
+
+decodeImage(imageData);
+
+}
+
+function decodeImage(image){
+
+let img = new Image();
+
+img.src = image;
+
+img.onload = function(){
+
+codeReader.decodeFromImage(img)
+.then(result=>{
 
 document.getElementById("beep").play();
 
-/* send barcode back */
+/* send barcode to Apps Script */
 
 window.opener.postMessage(
-{ barcode: code },
+{ barcode: result.text },
 "*"
 );
-
-/* stop scanner */
-
-Quagga.stop();
 
 /* close scanner */
 
@@ -122,7 +116,14 @@ setTimeout(()=>{
 window.close();
 },400);
 
+})
+.catch(err=>{
+alert("Barcode not detected. Try again.");
 });
+
+}
+
+}
 
 </script>
 
