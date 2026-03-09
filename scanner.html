@@ -28,17 +28,17 @@ margin-bottom:15px;
 font-size:18px;
 }
 
-/* Scanner container */
+/* scanner box */
 
 #scanner{
 width:260px;
 max-width:80vw;
-margin:auto;
 border-radius:10px;
 overflow:hidden;
+position:relative;
 }
 
-/* Ensure video stays inside */
+/* camera */
 
 #scanner video{
 width:100%;
@@ -46,7 +46,30 @@ height:auto;
 display:block;
 }
 
-/* Smaller scanner on phones */
+/* success flash */
+
+#flash{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#00ff55;
+opacity:0;
+pointer-events:none;
+}
+
+.flash{
+animation:flash 0.4s;
+}
+
+@keyframes flash{
+0%{opacity:0}
+40%{opacity:0.7}
+100%{opacity:0}
+}
+
+/* mobile smaller */
 
 @media (max-width:600px){
 
@@ -64,7 +87,9 @@ width:200px;
 
 <h2>Scanning Barcode...</h2>
 
-<div id="scanner"></div>
+<div id="scanner">
+<div id="flash"></div>
+</div>
 
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
@@ -80,19 +105,28 @@ type:"LiveStream",
 target:document.querySelector('#scanner'),
 
 constraints:{
-width:640,
-height:480,
-facingMode:"environment"
+width:{ideal:1280},
+height:{ideal:720},
+facingMode:"environment",
+
+advanced:[
+{focusMode:"continuous"},
+{exposureMode:"continuous"},
+{whiteBalanceMode:"continuous"}
+]
+
 }
 
 },
 
 locator:{
 patchSize:"large",
-halfSample:true
+halfSample:false
 },
 
-numOfWorkers: navigator.hardwareConcurrency || 4,
+numOfWorkers:navigator.hardwareConcurrency || 4,
+
+frequency:10,
 
 decoder:{
 readers:[
@@ -119,23 +153,18 @@ Quagga.start();
 });
 
 
-/* DRAW DETECTION BOX */
+/* draw detection box */
 
 Quagga.onProcessed(function(result){
 
-let drawingCtx = Quagga.canvas.ctx.overlay;
-let drawingCanvas = Quagga.canvas.dom.overlay;
+let ctx = Quagga.canvas.ctx.overlay;
+let canvas = Quagga.canvas.dom.overlay;
 
 if(result){
 
 if(result.boxes){
 
-drawingCtx.clearRect(
-0,
-0,
-drawingCanvas.width,
-drawingCanvas.height
-);
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
 result.boxes.filter(function(box){
 return box !== result.box;
@@ -143,9 +172,9 @@ return box !== result.box;
 
 Quagga.ImageDebug.drawPath(
 box,
-{ x:0, y:1 },
-drawingCtx,
-{ color:"green", lineWidth:2 }
+{x:0,y:1},
+ctx,
+{color:"green",lineWidth:2}
 );
 
 });
@@ -156,9 +185,9 @@ if(result.box){
 
 Quagga.ImageDebug.drawPath(
 result.box,
-{ x:0, y:1 },
-drawingCtx,
-{ color:"red", lineWidth:3 }
+{x:0,y:1},
+ctx,
+{color:"red",lineWidth:3}
 );
 
 }
@@ -168,24 +197,41 @@ drawingCtx,
 });
 
 
-/* BARCODE DETECTED */
+/* barcode detected */
 
 Quagga.onDetected(function(data){
 
 let code = data.codeResult.code;
 
+/* beep */
+
 document.getElementById("beep").play();
+
+/* flash animation */
+
+let flash = document.getElementById("flash");
+flash.classList.add("flash");
+
+setTimeout(()=>{
+flash.classList.remove("flash");
+},400);
+
+/* send barcode back */
 
 window.opener.postMessage(
 { barcode: code },
 "*"
 );
 
+/* stop scanner */
+
 Quagga.stop();
+
+/* close scanner */
 
 setTimeout(()=>{
 window.close();
-},300);
+},400);
 
 });
 
