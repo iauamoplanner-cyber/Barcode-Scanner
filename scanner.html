@@ -23,13 +23,19 @@ justify-content:center;
 text-align:center;
 }
 
-#reader{
+h2{
+margin-bottom:15px;
+font-size:18px;
+}
+
+#qr-reader{
 width:260px;
 max-width:80vw;
+margin:auto;
 }
 
 @media (max-width:600px){
-#reader{
+#qr-reader{
 width:200px;
 }
 }
@@ -42,7 +48,7 @@ width:200px;
 
 <h2>Scanning Barcode...</h2>
 
-<div id="reader"></div>
+<div id="qr-reader"></div>
 
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
@@ -50,34 +56,25 @@ width:200px;
 
 <script>
 
-function onScanSuccess(decodedText) {
-
-document.getElementById("beep").play();
-
-window.opener.postMessage(
-{ barcode: decodedText },
-"*"
-);
-
-html5QrcodeScanner.clear();
-
-setTimeout(()=>{
-window.close();
-},300);
-
+function docReady(fn){
+if(document.readyState === "complete" || document.readyState === "interactive"){
+setTimeout(fn,1);
+}else{
+document.addEventListener("DOMContentLoaded",fn);
+}
 }
 
-function onScanFailure(error) {
-/* ignore scan errors */
-}
+docReady(function(){
 
-let html5QrcodeScanner = new Html5QrcodeScanner(
-"reader",
+let lastResult;
+
+const scanner = new Html5QrcodeScanner(
+"qr-reader",
 {
-fps: 15,
-qrbox: { width: 200, height: 80 },
-aspectRatio: 1.5,
-formatsToSupport: [
+fps:15,
+qrbox:{width:220,height:100},
+aspectRatio:1.7,
+formatsToSupport:[
 Html5QrcodeSupportedFormats.CODE_128,
 Html5QrcodeSupportedFormats.CODE_39,
 Html5QrcodeSupportedFormats.EAN_13,
@@ -89,9 +86,45 @@ Html5QrcodeSupportedFormats.UPC_E
 false
 );
 
-html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+function onScanSuccess(decodedText){
+
+if(decodedText !== lastResult){
+
+lastResult = decodedText;
+
+document.getElementById("beep").play();
+
+/* send barcode back to Apps Script */
+
+window.opener.postMessage(
+{ barcode: decodedText },
+"*"
+);
+
+/* stop scanner */
+
+scanner.clear();
+
+/* close scanner */
+
+setTimeout(()=>{
+window.close();
+},300);
+
+}
+
+}
+
+function onScanError(error){
+/* ignore scan errors */
+}
+
+scanner.render(onScanSuccess,onScanError);
+
+});
 
 </script>
 
 </body>
+
 </html>
