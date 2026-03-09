@@ -51,7 +51,7 @@ if(result){
 
 document.getElementById("beep").play();
 
-/* send barcode to Apps Script */
+/* send barcode back */
 
 window.opener.postMessage(
 { barcode: result.text },
@@ -75,4 +75,5 @@ window.close();
 </script>
 
 </body>
+
 </html>
