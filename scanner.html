@@ -31,19 +31,23 @@ font-size:18px;
 /* scanner container */
 
 #scanner{
-width:260px;
-max-width:80vw;
 position:relative;
-border-radius:10px;
+width:260px;
+height:200px;
 overflow:hidden;
+border-radius:10px;
 }
 
-/* video */
+/* force camera to fill container */
 
-#scanner video{
-width:100%;
-height:auto;
-display:block;
+#scanner video,
+#scanner canvas{
+position:absolute;
+top:0;
+left:0;
+width:100% !important;
+height:100% !important;
+object-fit:cover;
 }
 
 /* scan target box */
@@ -56,8 +60,9 @@ transform:translate(-50%,-50%);
 width:80%;
 height:35%;
 border:3px solid #00ff66;
-border-radius:8px;
+border-radius:6px;
 pointer-events:none;
+z-index:10;
 }
 
 /* animated scan line */
@@ -69,6 +74,7 @@ width:80%;
 height:3px;
 background:#00ff66;
 top:50%;
+z-index:11;
 animation:scan 2s infinite;
 }
 
@@ -84,6 +90,7 @@ animation:scan 2s infinite;
 
 #scanner{
 width:200px;
+height:150px;
 }
 
 }
