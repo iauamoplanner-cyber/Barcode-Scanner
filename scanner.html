@@ -36,7 +36,7 @@ border-radius:10px;
 overflow:hidden;
 }
 
-/* red scan line animation */
+/* red laser scan line */
 
 #scan-line{
 position:absolute;
@@ -48,13 +48,24 @@ animation:scan 2s infinite;
 }
 
 @keyframes scan{
-
 0%{top:0}
-
 50%{top:90%}
-
 100%{top:0}
+}
 
+button{
+margin-top:15px;
+padding:10px 15px;
+font-size:16px;
+border:none;
+border-radius:5px;
+background:#28a745;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#218838;
 }
 
 </style>
@@ -73,50 +84,106 @@ animation:scan 2s infinite;
 
 </div>
 
+<br>
+
+<button onclick="switchCamera()">Switch Camera</button>
+
 <audio id="beep">
 <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
 </audio>
 
 <script>
 
-const scanner = new Html5Qrcode("reader");
+let scanner;
+let cameras=[];
+let currentCamera=0;
 
-/* Start scanner using rear camera on phones */
+scanner=new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras().then(devices=>{
+
+if(!devices.length){
+
+alert("No camera detected");
+
+return;
+
+}
+
+cameras=devices;
+
+/* choose rear camera if available */
+
+devices.forEach((device,index)=>{
+
+if(device.label.toLowerCase().includes("back") ||
+device.label.toLowerCase().includes("rear")){
+
+currentCamera=index;
+
+}
+
+});
+
+startScanner();
+
+});
+
+function startScanner(){
 
 scanner.start(
-{ facingMode: "environment" },
+
+cameras[currentCamera].id,
+
 {
-fps:15,
-qrbox:250,
-aspectRatio:1.777
+fps:20,
+qrbox:250
 },
+
 (decodedText)=>{
 
-/* play beep sound */
+/* beep sound */
 
 document.getElementById("beep").play();
 
-/* send barcode back to inventory system */
+/* send barcode back */
 
 window.opener.postMessage(
 { barcode: decodedText },
 "*"
 );
 
-/* close scanner window */
+/* continuous scanning delay */
 
-setTimeout(()=>{
-window.close();
-},500);
+setTimeout(()=>{},800);
 
 },
-(errorMessage)=>{
 
-/* ignore scan errors */
+(error)=>{}
+
+);
 
 }
 
-);
+/* switch camera */
+
+function switchCamera(){
+
+scanner.stop().then(()=>{
+
+currentCamera++;
+
+if(currentCamera>=cameras.length){
+
+currentCamera=0;
+
+}
+
+startScanner();
+
+});
+
+}
 
 </script>
 
